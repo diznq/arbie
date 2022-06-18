@@ -1,0 +1,17 @@
+{
+  "name": "arbie",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "binance-api-node": "^0.11.34",
+    "express": "^4.17.3",
+    "request": "^2.88.2",
+    "ws": "^8.5.0"
+  }
+}

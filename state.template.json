@@ -1,0 +1,20 @@
+{
+    "holding": "SOL",
+    "pairs": {
+      "USDT": {
+        "symbol": null,
+        "USDT": 100,
+        "fiat": true
+      },
+      "SOL": {
+        "symbol": "SOLUSDT",
+        "SOL": 10,
+        "USDT": 100
+      }
+    },
+    "track": {
+      "USDT": 1000,
+      "SOL": 50
+    },
+    "balances": {}
+  }

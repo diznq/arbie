@@ -28,6 +28,13 @@ const OFFSET = parseFloat(env.OFFSET || "1")
 const bullrunBarrier = parseFloat(env.BULLRUN_BARRIER || "0")
 const bearrunBarrier = parseFloat(env.BEARRUN_BARRIER || "0")
 let ROI = parseFloat(env.ROI || "1.15")
+let VROI = parseFloat(env.VROI || "1.00")
+
+function getROI(timeSinceLastTrade) {
+    let Minutes = Math.max(1, timeSinceLastTrade / 60000)
+    let VROIs = Math.pow(VROI, 1 / 1440)
+    return (ROI - 1 + Math.pow(VROIs, Minutes))
+}
 
 async function getDepth(symbol) {
     return new Promise((resolve) => {
@@ -67,6 +74,10 @@ async function main() {
     const app = express()
     app.use(express.json())
     app.use("/trader/ui/", express.static(__dirname + "/../static"))
+
+    if(typeof(state.lastTrade) != "number"){
+        state.lastTrade = Date.now()
+    }
 
     let sseClients = []
     let sseCtr = 0
@@ -174,7 +185,9 @@ async function main() {
                     }
                 }
                 const MainCCY = assets.assets[CCY]
+                const RROI = getROI(Date.now() - state.lastTrade)
                 let bestDeal = 0, bestDealCoin = null, newHoldings = 0;
+
                 for (const key in state.track) {
                     if (Object.hasOwnProperty.call(state.track, key)) {
                         const last = state.track[key];
@@ -204,8 +217,8 @@ async function main() {
                             state.track[key] = Math.max(state.track[key], newAmount)
                         }
 
-                        if (holdingFiat && !eyeingFiat && ratio < (ROI + bearrunBarrier)) canPerformLocal = false;
-                        else if (!holdingFiat && eyeingFiat && ratio < (ROI + bullrunBarrier)) canPerformLocal = false;
+                        if (holdingFiat && !eyeingFiat && ratio < (RROI + bearrunBarrier)) canPerformLocal = false;
+                        else if (!holdingFiat && eyeingFiat && ratio < (RROI + bullrunBarrier)) canPerformLocal = false;
                         else if (key == state.holding) canPerformLocal = false;
                         if (ratio > bestDeal && canPerformLocal) {
                             bestDeal = ratio
@@ -222,12 +235,13 @@ async function main() {
                 }
                 ssePublish(getPubObj())
                 //console.log(returns)
-                if (bestDeal >= ROI && !afterSell && isActive) {
+                if (bestDeal >= RROI && !afterSell && isActive) {
                     if (processing) return;
-                    console.log("Best deal is ", bestDealCoin, "old holdings: ", state.track[bestDealCoin], "new holdings: ", newHoldings, "active: ", processing)
+                    console.log("Best deal is ", bestDealCoin, "old holdings: ", state.track[bestDealCoin], "new holdings: ", newHoldings, "active: ", processing, "rroi: ", RROI)
                     if (noTrades >= maxTrades) return;
                     //return;
                     processing = true;
+                    state.lastTrade = Date.now()
                     if (bestDealCoin == CCY) {
                         let spec = state.pairs[state.holding]
                         let symbol = spec.symbol
@@ -302,8 +316,9 @@ async function main() {
 
     app.get("/trader/roi", (req, res) => {
         if ((req.query.token || "") !== topSecret) return res.send({ error: "invalid auth token" })
-        ROI = parseFloat(req.query.ROI || ROI)
-        res.send({ ROI: ROI })
+        ROI = parseFloat(req.query.roi || ROI)
+        VROI = parseFloat(req.query.vroi || VROI)
+        res.send({ ROI: ROI, VROI: VROI, RealROI: getROI(Date.now() - state.lastTrade) })
     })
 
     app.get("/trader/trades", (req, res) => {

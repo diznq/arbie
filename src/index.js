@@ -34,7 +34,7 @@ let VROI_MAX = parseFloat(env.VROI_MAX || "1.0")
 function getROI(timeSinceLastTrade) {
     let Minutes = Math.max(1440, timeSinceLastTrade / 60000)
     let VROIc = Math.pow(VROI, Minutes / 1440)
-    if(VROIc > VROI_MAX && VROI_MAX > 1) VROIc = VROI_MAX
+    if (VROIc > VROI_MAX && VROI_MAX > 1) VROIc = VROI_MAX
     return (ROI - 1 + VROIc)
 }
 
@@ -77,7 +77,7 @@ async function main() {
     app.use(express.json())
     app.use("/trader/ui/", express.static(__dirname + "/../static"))
 
-    if(typeof(state.lastTrade) != "number"){
+    if (typeof (state.lastTrade) != "number") {
         state.lastTrade = Date.now()
     }
 
@@ -338,7 +338,7 @@ async function main() {
     app.get("/trader/active/:state", (req, res) => {
         if ((req.query.token || "") !== topSecret) return res.send({ error: "invalid auth token" })
         isActive = req.params.state != "0"
-        res.send({active: isActive})
+        res.send({ active: isActive })
     })
 
     app.post("/trader/asset/:asset", async (req, res) => {

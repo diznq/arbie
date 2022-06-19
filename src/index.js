@@ -32,9 +32,8 @@ let VROI = parseFloat(env.VROI || "1.00")
 let VROI_MAX = parseFloat(env.VROI_MAX || "1.0")
 
 function getROI(timeSinceLastTrade) {
-    let Minutes = Math.max(1, timeSinceLastTrade / 60000)
-    let VROIs = Math.pow(VROI, 1 / 1440)
-    let VROIc = Math.pow(VROIs, Minutes)
+    let Minutes = Math.max(1440, timeSinceLastTrade / 60000)
+    let VROIc = Math.pow(VROI, Minutes / 1440)
     if(VROIc > VROI_MAX && VROI_MAX > 1) VROIc = VROI_MAX
     return (ROI - 1 + VROIc)
 }

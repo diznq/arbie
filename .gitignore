@@ -3,3 +3,5 @@ state.json
 node_modules/
 .ipynb_checkpoints/
 research/
+.Rproj.user
+streams/*.bin

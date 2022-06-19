@@ -22,6 +22,7 @@ if (!env.BINANCE_API_KEY || !env.BINANCE_API_SECRET) {
     process.exit(1)
 }
 
+const COLLECT = (env.COLLECT || "false").toString() == "true"
 const CCY = env.CCY || "USDT"
 const OFFSET = parseFloat(env.OFFSET || "1")
 const bullrunBarrier = parseFloat(env.BULLRUN_BARRIER || "0")
@@ -70,7 +71,7 @@ async function main() {
     let sseClients = []
     let sseCtr = 0
     let topSecret = env.REST_API_TOKEN
-    let isActive = (env.ACTIVE || "true") == "true"
+    let isActive = (env.ACTIVE || "true").toString() == "true"
 
     function ssePublish(msg) {
         sseClients.forEach(cli => cli.cli.write(`data:${JSON.stringify(msg)}\n\n`))
@@ -101,7 +102,7 @@ async function main() {
         if (Object.hasOwnProperty.call(state.pairs, key)) {
             const element = state.pairs[key].symbol;
             if (element == null) continue;
-            obs[element] = new OrderBook(element)
+            obs[element] = new OrderBook(element, COLLECT)
             symbols.push(element)
         }
     }
@@ -332,7 +333,7 @@ async function main() {
         }
         const symbol = pair.symbol
         const depth = await getDepth(symbol)
-        const ob = new OrderBook(symbol)
+        const ob = new OrderBook(symbol, COLLECT)
         ob.update(depth.bids, depth.asks)
         obs[symbol] = ob;
         reconnect = true;

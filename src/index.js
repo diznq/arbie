@@ -29,11 +29,14 @@ const bullrunBarrier = parseFloat(env.BULLRUN_BARRIER || "0")
 const bearrunBarrier = parseFloat(env.BEARRUN_BARRIER || "0")
 let ROI = parseFloat(env.ROI || "1.15")
 let VROI = parseFloat(env.VROI || "1.00")
+let VROI_MAX = parseFloat(env.VROI_MAX || "1.0")
 
 function getROI(timeSinceLastTrade) {
     let Minutes = Math.max(1, timeSinceLastTrade / 60000)
     let VROIs = Math.pow(VROI, 1 / 1440)
-    return (ROI - 1 + Math.pow(VROIs, Minutes))
+    let VROIc = Math.pow(VROIs, Minutes)
+    if(VROIc > VROI_MAX && VROI_MAX > 1) VROIc = VROI_MAX
+    return (ROI - 1 + VROIc)
 }
 
 async function getDepth(symbol) {
@@ -318,7 +321,8 @@ async function main() {
         if ((req.query.token || "") !== topSecret) return res.send({ error: "invalid auth token" })
         ROI = parseFloat(req.query.roi || ROI)
         VROI = parseFloat(req.query.vroi || VROI)
-        res.send({ ROI: ROI, VROI: VROI, RealROI: getROI(Date.now() - state.lastTrade) })
+        VROI_MAX = parseFloat(req.query.vroim || VROI_MAX)
+        res.send({ ROI: ROI, VROI: VROI, VROI_MAX: VROI_MAX, RealROI: getROI(Date.now() - state.lastTrade) })
     })
 
     app.get("/trader/trades", (req, res) => {

@@ -41,8 +41,12 @@ function getROI(timeSinceLastTrade) {
 async function getDepth(symbol) {
     return new Promise((resolve) => {
         request.get("https://api.binance.com/api/v3/depth?symbol=" + symbol + "&limit=1000", (e, resp, body) => {
-            const obj = JSON.parse(body)
-            return resolve(obj)
+            try {
+                const obj = JSON.parse(body)
+                return resolve(obj)
+            } catch(ex) {
+                resolve(null);
+            }
         })
     })
 }
@@ -130,6 +134,7 @@ async function main() {
         let awaits = []
         for (let i = 0; i < symbols.length; i++) {
             awaits.push(getDepth(symbols[i]).then(obj => {
+                if(!obj) return;
                 obs[symbols[i]].update(obj.bids, obj.asks, true)
             }))
         }
@@ -352,7 +357,8 @@ async function main() {
         const symbol = pair.symbol
         const depth = await getDepth(symbol)
         const ob = new OrderBook(symbol, COLLECT)
-        ob.update(depth.bids, depth.asks)
+        if(depth != null)
+            ob.update(depth.bids, depth.asks)
         obs[symbol] = ob;
         reconnect = true;
         symbols.push(symbol)
@@ -383,7 +389,7 @@ async function main() {
 
     setInterval(() => {
         syncOrderbooks()
-    }, 300 * 1000)
+    }, 1800 * 1000)
 
     connect()
     app.listen(8000)
